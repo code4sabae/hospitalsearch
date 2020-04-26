@@ -1,0 +1,418 @@
+<!DOCTYPE html><html><head>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-162141832-1"></script>
+<script>
+window.dataLayer = window.dataLayer || []
+function gtag(){dataLayer.push(arguments)}
+gtag('js', new Date())
+gtag('config', 'UA-162141832-1')
+</script>
+<meta charset="utf-8"/>
+<title>オンライン診療サーチ</title>
+<meta property="og:title" content="オンライン診断サーチ"/>
+<meta property="og:description" content="オンライン診断に対応した医療機関を検索できます（出典:オンライン診療実施医療機関リスト、加工:まじめな所長＠医療介護データ研究所）"/>
+<link rel="icon" type="image/png" href=""/>
+<link rel="apple-touch-icon" href=""/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content=""/>
+<meta property="og:image" content=""/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="format-detection" content="telephone=no"/>
+<style>
+body {
+	font-family: sans-serif;
+	font-size: 2vmax;
+	margin: 0;
+	--main-color: #70c7ef;
+	background-color: var(--main-color);
+}
+h1 {
+	margin: 0;
+	padding: .3em .3em 0.3em .3em;
+	font-size: 8vw;
+	text-align: center;
+	color: white;
+}
+.subtitle {
+	color: #333;
+	font-size: 2vw;
+	text-align: center;
+}
+.subtitle > a {
+	color: #333 !important;
+	x-text-decoration: none;
+}
+#selectboxes {
+	text-align: center;
+}
+
+input[type=text] {
+	max-width: 1000px;
+	width: 80vw;
+	margin: .5em .2em 0.2em .5em;
+	font-size: 24px;
+	border: 2px solid black;
+	line-height: 1.3em;
+	padding: 0.1em .3em;
+}
+button {
+	margin: .5em .2em 0em .2em;
+	font-size: 24px;
+	border: 2px solid black;
+	line-height: 1.3em;
+}
+#total {
+	text-align: center;
+	font-size: 80%;
+	margin-top: 1em;
+	margin-bottom: .5em;
+}
+h2 {
+	background-color: #F7F8F4;
+	padding: .2em 0em .5em 0em;
+	margin: 0;
+}
+.container {
+	max-width: 1200px;
+	margin: 0 auto;
+}
+.item {
+	background-color: #F5F5F5;
+	padding: 1em;
+	margin: 1em;
+	line-height: 1.8em;
+}
+.item a {
+	color: #333 !important;
+}
+.url {
+	background-color: var(--main-color);
+	border-radius: 2vw;
+	font-weight: bold;
+	text-align: center;
+	padding: .5em;
+	margin-top: .5em;
+	margin-bottom: 1em;
+}
+.url > a {
+	display: block;
+	text-decoration: none;
+	color: black !important;
+}
+.searchboxid {
+	margin-top: 1em;
+	text-align: center;
+}
+.sitedesc {
+	font-size: 80%;
+	display: inline-block;
+}
+.sitedesc > a {
+	color: black !important;
+}
+.description {
+}
+.tags {
+	text-align: center;
+	margin: .6em;
+}
+.tags > div {
+	display: inline-block;
+	border: 1px solid black;
+	padding: 0 .3em;
+	font-size: 80%;
+	line-height: 1.8em;
+	background-color: white;
+	margin: .5em 0.2em;
+	cursor: pointer;
+}
+#morebtn {
+	display: none;
+	background-color: white;
+	border-radius: 2vw;
+	font-weight: bold;
+	text-align: center;
+	padding: .5em;
+	margin: .5em 3em 2em 3em;
+	cursor: pointer;
+}
+/* footer */
+#src {
+	margin: .5em;
+	text-align: center;
+	font-size: 90%;
+}
+#src a {
+	color: black !important;
+}
+#note {
+	font-size: 70%;
+	margin: 1em;
+}
+#note a {
+	color: black !important;
+}
+#share {
+	margin: 0 1em;
+	text-align: center;
+}
+#share > * {
+  vertical-align: bottom;
+}
+#fb-share-button {
+	display: inline-block;
+	margin: .1em;
+}
+#qrcodecontainer {
+	text-align: center;
+	margin-top: 0.5em;
+	margin-bottom: 1em;
+}
+</style>
+<script type='module'>
+
+import util from 'https://taisukef.github.io/util/util.mjs'
+
+window.onload = async function() {
+  const url = 'mhlwgojp_hospital_online.csv'
+  const data = await util.fetchCSVtoJSON(url)
+	console.log(data)
+	const [ select, split ] = [ 1, 2 ]
+	
+	// セレクトボックスを表示する項目名
+	const SELECT_NAMES = {
+		'都道府県': select,
+		'対応診療科': split,
+		'初診の対応可能': select,
+		'再診の対応可能': select,
+		//'地方': select,
+		//'二次医療圏': select,
+		//'ウェブサイトURL': exists,
+	}
+	// タイトル
+	const TITLE_NAME = '施設名'
+	// 表示項目
+	const URL_NAME = 'ウェブサイトURL'
+	// 非表示項目
+	const EXCEPT_NAMES = [ '行ID', '地方ID', '地方ID', '地方', 'ID地方', '都道府県ID', 'ID都道府県', '市区町村ID', '市区町村', 'ID市区町村', '二次医療圏ID', 'ID二次医療圏' ]
+	// split の場合の区切り文字
+	const SPLIT_CHAR = '、・,/／()（）"◆ 　'
+	const SPLIT_MAX_LEN = 20
+	// データをランダムに並び替えるかどうか
+	const DATA_SHUFFLE = true
+
+	for (const name in SELECT_NAMES) {
+		const type = SELECT_NAMES[name]
+		const list = []
+		if (type == select) {
+			for (const d of data) {
+				const v = d[name]
+				if (v && v.length > 0 && list.indexOf(v) == -1) {
+					list.push(v)
+				}
+			}
+		} else if (type == split) {
+			for (const d of data) {
+				const v = d[name]
+				if (v && v.length > 0) {
+					const v2 = util.splitString(v, SPLIT_CHAR)
+					for (const v3 of v2) {
+						const v4 = v3.normalize('NFKC')
+						if (v4.length < SPLIT_MAX_LEN && list.indexOf(v4) == -1) {
+							list.push(v4)
+						}
+					}
+				}
+			}
+		}
+		/*
+		const sortkey = SORT_KEY[name]
+		if (sortkey) {
+			console.log(name, sortkey)
+			list.sort((a, b) => {
+				const n = sortkey.indexOf(a.charAt(0))
+				const m = sortkey.indexOf(b.charAt(0))
+				if (n != m) {
+					if (n >= 0 && m >= 0) {
+						return n - m
+					} else if (n < 0) {
+						return 1
+					} else if (m < 0) {
+						return -1
+					}
+				}
+				if (a > b) {
+					return 1
+				} else if (a < b) {
+					return -1
+				}
+				return 0
+			})
+		} else {
+			//list.sort()
+		}
+		*/
+		list.unshift(name)
+		if (list.length > 1) {
+			const sel = document.createElement("select")
+			for (const v of list) {
+				const opt = document.createElement('option')
+				opt.textContent = v
+				sel.appendChild(opt)
+			}
+			selectboxes.appendChild(sel)
+		}
+	}
+	if (DATA_SHUFFLE)
+		util.shuffle(data)
+
+	const show = function() {
+		const key = searchbox.value.normalize("NFKC")
+		main.innerHTML = ''
+
+		let hash = key
+		document.location.hash = hash.length > 0 ? '#' + encodeURIComponent(hash) : ""
+		const keys = key.replace(/　/g, ' ').split(' ')
+
+		const items = []
+		A: for (const d of data) {
+			if (key) {
+				for (const k of keys) {
+					let flg = false
+					for (const name in d) {
+						if (d[name].normalize("NFKC").indexOf(k) >= 0) {
+							flg = true
+							break
+						}
+					}
+					if (!flg)
+						continue A
+				}
+			}
+			for (let i = 0; i < selectboxes.children.length; i++) {
+				const sel = selectboxes.children[i]
+				if (sel.selectedIndex > 0) {
+					const v = sel.value
+					const v2 = d[sel.children[0].value]
+					if (!v2 || v2.indexOf(v) == -1) {
+						continue A
+					}
+				}
+			}
+			items.push(d)
+		}
+		const nppage = 15
+		for (let i = 0; i < items.length; i++) {
+			const d = items[i]
+			
+			const div = document.createElement('div')
+			div.className = "item"
+
+			const s = []
+			s.push(`<h2>${d[TITLE_NAME]}</h2>`)
+			for (const name in d) {
+				if (name == TITLE_NAME || EXCEPT_NAMES.indexOf(name) >= 0)
+					continue
+				const v = d[name]
+				if (v)
+					s.push(`<div class=from>${name}：${v}</div>`)
+			}
+			const url = d[URL_NAME]
+			if (url && url.length > 0)
+				s.push(`<div class=url><a href=${url}>アクセスする</a></div>`)
+			div.innerHTML = s.join("")
+				
+			div.style.display = i < nppage ? "block" : "none"
+			main.appendChild(div)
+		}
+		morebtn.cnt = nppage
+		morebtn.style.display = items.length > nppage ? "block" : 'none'
+		morebtn.onclick = function() {
+			let cnt = 0
+			for (let i = 0; i < nppage; i++) {
+				const c = main.children[this.cnt + i]
+				if (c) {
+					c.style.display = "block"
+					cnt++
+				}
+			}
+			this.cnt += cnt
+			console.log(cnt, this.cnt, )
+			this.style.display = this.cnt == items.length ? "none" : "block"
+		}
+
+		total.textContent = `ヒット${items.length}件 / 全${data.length}件`
+	}
+	searchbox.onkeyup = searchbox.onchange = show
+	searchbox.onfocus = function() {
+		this.select()
+	}
+	if (window['btnclear']) {
+		btnclear.onclick = function() {
+			searchbox.value = ''
+			show()
+		}
+	}
+
+	let chkflg = false
+	if (document.location.hash.length > 1) {
+		let key = decodeURIComponent(document.location.hash.substring(1))
+		/*
+		for (const chk in chktarget) {
+			const chkbox = document.getElementById(chk)
+			const lbl = chkbox.parentElement.textContent
+			if (key.endsWith(" " + lbl)) {
+				key = key.substring(0, key.length - 1 - lbl.length)
+				chkbox.checked = true
+				chkflg = true
+			}
+		}
+		*/
+		searchbox.value = key
+	}
+	show()
+
+	for (let i = 0; i < selectboxes.children.length; i++) {
+		const sel = selectboxes.children[i]
+		sel.onchange = show
+	}
+}
+
+</script>
+</head>
+<body>
+
+<div class='header'>
+	<h1 id='title'>オンライン診療サーチ</h1>
+	<div class='subtitle'>オンライン診療対応医療機関リストを検索するアプリです<br>（出典: <a href='https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/iryou/rinsyo/index_00014.html'>厚生労働省PDF</a>、CSV加工 by <a href=https://note.com/iryokaigodb/n/n271b7c32eb63>まじめな所長＠医療介護データ研究所</a>）</div>
+</div>
+
+<div class="container">
+<div class="searchboxid">
+	<input type='text' id='searchbox' placeholder="検索する単語を入力">
+</div>
+<div id="selectboxes"></div>
+<div id='total'></div>
+<div id="main"></div>
+<div id='morebtn'>もっとみる</div>
+
+<div id="note"></div>
+
+
+<div id="src">
+Data: <a href='https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/iryou/rinsyo/index_00014.html'>厚生労働省PDF</a>、CSV加工 by <a href=https://note.com/iryokaigodb/n/n271b7c32eb63>まじめな所長＠医療介護データ研究所</a><br>
+App：<a href=https://www.stopcavid19.jp/hospitalsearch.html>オンライン診療サーチ</a> <a href=https://creativecommons.org/licenses/by/4.0/deed.ja>CC BY</a> <a href='https://fukuno.jig.jp/'>@taisukef</a> (<a href=https://github.com/code4sabae/covid19>src on GitHub</a>)<br>
+Design: <a href=https://creativecommons.org/licenses/by/4.0/deed.ja>CC BY</a> <a href=https://howmori.org/>HOWMORI</a> <a href=https://twitter.com/howmori>Takuya Yamagata</a><br>
+</div>
+
+<div id='share'>
+	<div id="fb-root"></div>
+	<script async defer crossorigin="anonymous" src="https://connect.facebook.net/ja_JP/sdk.js#xfbml=1&version=v6.0&appId=214172318638956&autoLogAppEvents=1"></script>
+	<div class="fb-share-button" data-href="https://code4fukui.github.io/timetable/search.html" data-layout="button_count" data-size="small"><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fcode4fukui.github.io%2Ftimetable%2Fsearch.html&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">シェア</a></div>
+	<a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-show-count="false">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+	<a href="https://b.hatena.ne.jp/entry/s/code4fukui.github.io/timetable/search.html" class="hatena-bookmark-button" data-hatena-bookmark-layout="basic-label-counter" data-hatena-bookmark-lang="ja" title="このエントリーをはてなブックマークに追加"><img src="https://b.st-hatena.com/images/v4/public/entry-button/button-only@2x.png" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a><script type="text/javascript" src="https://b.st-hatena.com/js/bookmark_button.js" charset="utf-8" async="async"></script>
+	<div id=qrcodecontainer><img id=qrcode><script>addEventListener("load", () => qrcode.src = "https://chart.apis.google.com/chart?chs=140x140&cht=qr&chl=" + encodeURIComponent(document.location))</script></div>
+</div>
+
+</body>
+</html>
